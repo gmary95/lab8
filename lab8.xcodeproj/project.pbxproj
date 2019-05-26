@@ -16,6 +16,8 @@
 		8EB7275F22903FC000A7DE2F /* AlertHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB7275D22903FC000A7DE2F /* AlertHelper.swift */; };
 		8EB727612290454300A7DE2F /* DoubleExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB727602290454300A7DE2F /* DoubleExtension.swift */; };
 		8EB727632290458600A7DE2F /* ArrayHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB727622290458600A7DE2F /* ArrayHelper.swift */; };
+		8EE0BB7822932755000D371C /* Matrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE0BB7622932755000D371C /* Matrix.swift */; };
+		8EE0BB7922932755000D371C /* OrdinaryLeastSquares.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE0BB7722932755000D371C /* OrdinaryLeastSquares.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +33,8 @@
 		8EB7275D22903FC000A7DE2F /* AlertHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlertHelper.swift; sourceTree = "<group>"; };
 		8EB727602290454300A7DE2F /* DoubleExtension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DoubleExtension.swift; sourceTree = "<group>"; };
 		8EB727622290458600A7DE2F /* ArrayHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayHelper.swift; sourceTree = "<group>"; };
+		8EE0BB7622932755000D371C /* Matrix.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Matrix.swift; sourceTree = "<group>"; };
+		8EE0BB7722932755000D371C /* OrdinaryLeastSquares.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrdinaryLeastSquares.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +67,8 @@
 		8EB727492290235500A7DE2F /* lab8 */ = {
 			isa = PBXGroup;
 			children = (
+				8EE0BB7622932755000D371C /* Matrix.swift */,
+				8EE0BB7722932755000D371C /* OrdinaryLeastSquares.swift */,
 				8EB727602290454300A7DE2F /* DoubleExtension.swift */,
 				8EB7275D22903FC000A7DE2F /* AlertHelper.swift */,
 				8EB7275C22903FC000A7DE2F /* Quantil.swift */,
@@ -149,9 +155,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				8EB727612290454300A7DE2F /* DoubleExtension.swift in Sources */,
+				8EE0BB7922932755000D371C /* OrdinaryLeastSquares.swift in Sources */,
 				8EB7274D2290235500A7DE2F /* ViewController.swift in Sources */,
 				8EB727632290458600A7DE2F /* ArrayHelper.swift in Sources */,
 				8EB7275B22903D3B00A7DE2F /* FileModel.swift in Sources */,
+				8EE0BB7822932755000D371C /* Matrix.swift in Sources */,
 				8EB7275E22903FC000A7DE2F /* Quantil.swift in Sources */,
 				8EB7275F22903FC000A7DE2F /* AlertHelper.swift in Sources */,
 				8EB7274B2290235500A7DE2F /* AppDelegate.swift in Sources */,

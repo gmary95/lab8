@@ -15,6 +15,7 @@ class ViewController: NSViewController {
     @IBOutlet weak var epsText: NSTextFieldCell!
     @IBOutlet weak var betaText: NSTextFieldCell!
     @IBOutlet weak var parameterTable: NSTableView!
+    @IBOutlet weak var bTable: NSTableView!
     
     @IBOutlet weak var pText: NSTextFieldCell!
     @IBOutlet weak var p2Text: NSTextFieldCell!
@@ -45,7 +46,7 @@ class ViewController: NSViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
     }
     
     @IBAction func startPart2(_ sender: Any) {
@@ -95,8 +96,16 @@ class ViewController: NSViewController {
                 Tstud = Quantil.StudentQuantil(p: Double(yArray[0].count - 1), v: Double(yAvArray.count))
                 
                 dAd = calcDAd()
+                var tmp = 0.0
+                for el in dArray {
+                    tmp += el
+                }
+                tmp /= Double(dArray.count)
+                
+                dAd /= tmp
                 
                 experimentTable.reloadData()
+                bTable.reloadData()
                 resultsTable.reloadData()
             }
         } else {
@@ -176,26 +185,30 @@ class ViewController: NSViewController {
     
     func creatX() {
         xArray = []
-        for i in 0 ..< yArray.count {
+        for i in 0 ..< Nx * 3 {
             var x: [Int] = []
-            for j in 0 ..< Nx + 2 {
-                switch j {
-                case 0:
-                    x.append(1)
+            for j in 0 ..< Int(pow(Double(Nx), 2.0)) {
+                switch i {
                 case 1:
-                    if i % 2 == 0 {
-                        x.append(-1)
+                    if j % 2 == 0 {
+                        x.append(0)
                     } else {
                         x.append(1)
                     }
                 case 2:
-                    if Int(i / 2) % 2 != 0 {
+                    if Int(j / 2) % 2 != 0 {
                         x.append(1)
                     } else {
-                        x.append(-1)
+                        x.append(0)
                     }
+                case 3:
+                    x.append(xArray[1][j] * xArray[2][j])
+                case 4:
+                    x.append(xArray[1][j] * xArray[1][j])
+                case 5:
+                    x.append(xArray[2][j] * xArray[2][j])
                 default:
-                    x.append(x[1] * x[2])
+                    x.append(1)
                 }
             }
             xArray.append(x)
@@ -215,13 +228,89 @@ class ViewController: NSViewController {
     }
     
     func createB() {
-        for i in 0 ..< Nx + 2 {
-            var result = 0.0
-            for j in 0 ..< yAvArray.count {
-                result += Double(xArray[j][i]) * yAvArray[j]
+//        for k in 0 ..< xArray.count {
+//            var tmp = 0.0
+//            for i in 0 ..< xArray[0].count {
+//                tmp += yAvArray[i] * Double(xArray[k][i])
+//            }
+//            tmp /= Double(xArray[0].count)
+//            bArray.append(tmp)
+//        }
+        let xMatrix = createXMatrix(n: Nx)
+        let yMatrix = createYMatrix()
+        let bMatrix = OrdinaryLeastSquares().calculateParameter(xMatrix: xMatrix, yMatrix: yMatrix)
+        bArray = transformBMatrixToArray(b: bMatrix)
+    }
+    
+    func calcXSum() -> [Double] {
+        var arr: [Double] = []
+        for i in 0 ..< xArray.count {
+            var sum = 0.0
+            for j in 0 ..< xArray[0].count {
+                sum += Double(xArray[i][j])
             }
-            bArray.append(result)
+            arr.append(sum)
         }
+        return arr
+    }
+    
+    func calcSum(arr: [Double], multyplier: [Int]) -> Double {
+        var sum = 0.0
+        for i in 0 ..< arr.count {
+            sum += Double(multyplier[i]) * arr[i]
+        }
+        return sum
+    }
+    
+    func calcSum(arr: [Int], multyplier: [Int]) -> Double {
+        var sum = 0.0
+        for i in 0 ..< arr.count {
+            sum += Double(multyplier[i] * arr[i])
+        }
+        return sum
+    }
+    
+    func createXMatrix(n: Int) -> Matrix {
+        var xSumArr: [[Double]] = []
+        var x = Matrix(rows: xArray.count, columns: xArray.count, repeatedValue: 0)
+        for i in 0 ..< x.rows {
+            var xArr = [Double]()
+            for j in 0 ..< x.columns {
+                if i == 0 && j == 0 {
+                xArr.append(1.0)
+                } else {
+                    let sum = calcSum(arr: xArray[i], multyplier: xArray[j])
+                    xArr.append(sum)
+                    
+                }
+            }
+            xSumArr.append(xArr)
+        }
+        x = Matrix(xSumArr)
+        return x
+    }
+    
+    func createYMatrix() -> Matrix {
+        var y = Matrix(rows: yAvArray.count, columns: 1, repeatedValue: 0)
+        var array = [[Double]]()
+        for i in 0 ..< y.rows {
+            var tmp: [Int] = []
+            if i >= 0 {
+                tmp = xArray[i]
+            }
+            let sum = calcSum(arr: yAvArray, multyplier: tmp)
+            array.append([sum])
+        }
+        y = Matrix(array)
+        return y
+    }
+    
+    func transformBMatrixToArray(b: Matrix) -> [Double] {
+        var array = [Double]()
+        for i in 0 ..< b.rows {
+            array.append(b.array[i][0])
+        }
+        return array
     }
     
     func createT() {
@@ -250,9 +339,24 @@ class ViewController: NSViewController {
         let x20 = ArrayHelper.findAvPlus(array: fileModels, iParam: 1)
         let dx1 = ArrayHelper.findDx(array: fileModels, iParam: 0)
         let dx2 = ArrayHelper.findDx(array: fileModels, iParam: 1)
-        let x1 = (fileModels[i].parameters[0] - x10) / dx1
-        let x2 = (fileModels[i].parameters[1] - x20) / dx2
-        result = bArray[0] * x0 + bArray[1] * x1 + bArray[2] * x2 + bArray[3] * x1 * x2
+        let x1 = fileModels[i].parameters[0] //- x10) / dx1
+        let x2 = fileModels[i].parameters[1] //- x20) / dx2
+        result = bArray[0] * x0
+        if bArray[1] > Tstud {
+            result += bArray[1] * x1
+        }
+        if bArray[2] > Tstud {
+            result += bArray[2] * x2
+        }
+//        if bArray[3] > Tstud {
+//            result += bArray[3] * x1 * x2
+//        }
+//        if bArray[4] > Tstud {
+//            result += bArray[4] * x1 * x1
+//        }
+//        if bArray[5] > Tstud {
+//            result += bArray[5] * x2 * x2
+//        }
         return result
     }
     
@@ -278,6 +382,10 @@ extension ViewController: NSTableViewDataSource {
             let numberOfRows:Int = yArray.count
             return numberOfRows
         }
+        if tableView == bTable {
+            let numberOfRows:Int = bArray.count
+            return numberOfRows
+        }
         
         return 1
     }
@@ -301,12 +409,18 @@ extension ViewController: NSTableViewDelegate {
         static let X1Cell = "X1ID"
         static let X2Cell = "X2ID"
         static let X1X2Cell = "X1X2ID"
+        static let X1PowCell = "X1PowID"
+        static let X2PowCell = "X2PowID"
         static let Y1Cell = "Y1ID"
         static let Y2Cell = "Y2ID"
         static let Y3Cell = "Y3ID"
         static let Y4Cell = "Y4ID"
         static let YCell = "YID"
+        static let YPrCell = "YPrID"
         static let DCell = "DID"
+    }
+    
+    fileprivate enum CellIdentifiersBTable {
         static let BCell = "BID"
         static let TCell = "TID"
         static let TstudCell = "TstudID"
@@ -330,6 +444,10 @@ extension ViewController: NSTableViewDelegate {
         if tableView == resultsTable {
             return self.loadPirsonTest(tableView, viewFor: tableColumn, row: row)
         }
+        
+        if tableView == bTable {
+            return self.loadParameter(tableView, viewFor: tableColumn, row: row)
+        }
         return nil
     }
     
@@ -346,8 +464,8 @@ extension ViewController: NSTableViewDelegate {
                 text = "\(ArrayHelper.findDx(array: fileModels, iParam: row).rounded(toPlaces: 6))"
                 cellIdentifier = CellIdentifiersSelectionTable.DXCell
             } else if tableColumn == tableView.tableColumns[2] {
-                    text = "\(ArrayHelper.findMin(array: fileModels, iParam: row).rounded(toPlaces: 6))"
-                    cellIdentifier = CellIdentifiersSelectionTable.XMinCell
+                text = "\(ArrayHelper.findMin(array: fileModels, iParam: row).rounded(toPlaces: 6))"
+                cellIdentifier = CellIdentifiersSelectionTable.XMinCell
             } else if tableColumn == tableView.tableColumns[3] {
                 text = "\(ArrayHelper.findAv(array: fileModels, iParam: row).rounded(toPlaces: 6))"
                 cellIdentifier = CellIdentifiersSelectionTable.XMinCell
@@ -366,11 +484,11 @@ extension ViewController: NSTableViewDelegate {
     }
     
     func loadExper(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSTableCellView? {
-
+        
         if yArray.count > 0 {
             var text: String = ""
             var cellIdentifier: String = ""
-
+            
             if tableColumn == tableView.tableColumns[0] {
                 text = "\(row + 1)"
                 cellIdentifier = CellIdentifiersDetectionTable.TwoCell
@@ -378,15 +496,15 @@ extension ViewController: NSTableViewDelegate {
                 text = "+"
                 cellIdentifier = CellIdentifiersDetectionTable.X0Cell
             } else if tableColumn == tableView.tableColumns[2] {
-                if xArray[row][1] == 1 {
+                if xArray[1][row] == 1 {
                     text = "+"
                 } else {
                     text = "-"
                 }
                 text1 = text
-                    cellIdentifier = CellIdentifiersDetectionTable.X1Cell
+                cellIdentifier = CellIdentifiersDetectionTable.X1Cell
             }  else if tableColumn == tableView.tableColumns[3] {
-                if xArray[row][2] == 1 {
+                if xArray[2][row] == 1 {
                     text = "+"
                 } else {
                     text = "-"
@@ -394,64 +512,94 @@ extension ViewController: NSTableViewDelegate {
                 text2 = text
                 cellIdentifier = CellIdentifiersDetectionTable.X2Cell
             } else if tableColumn == tableView.tableColumns[4] {
-                if xArray[row][3] == 1 {
+                if xArray[3][row] == 1 {
                     text = "+"
                 } else {
                     text = "-"
                 }
                 cellIdentifier = CellIdentifiersDetectionTable.X1X2Cell
             } else if tableColumn == tableView.tableColumns[5] {
+                if xArray[4][row] == 1 {
+                    text = "+"
+                } else {
+                    text = "-"
+                }
+                cellIdentifier = CellIdentifiersDetectionTable.X1PowCell
+            } else if tableColumn == tableView.tableColumns[6] {
+                if xArray[5][row] == 1 {
+                    text = "+"
+                } else {
+                    text = "-"
+                }
+                cellIdentifier = CellIdentifiersDetectionTable.X2PowCell
+            } else if tableColumn == tableView.tableColumns[7] {
                 text = "\(yArray[row][0])"
                 cellIdentifier = CellIdentifiersDetectionTable.Y1Cell
-            } else if tableColumn == tableView.tableColumns[6] {
+            } else if tableColumn == tableView.tableColumns[8] {
                 text = "\(yArray[row][1])"
                 cellIdentifier = CellIdentifiersDetectionTable.Y2Cell
-            } else if tableColumn == tableView.tableColumns[7] {
+            } else if tableColumn == tableView.tableColumns[9] {
                 text = "\(yArray[row][2])"
                 cellIdentifier = CellIdentifiersDetectionTable.Y3Cell
-            } else if tableColumn == tableView.tableColumns[8] {
+            } else if tableColumn == tableView.tableColumns[10] {
                 text = "\(yArray[row][3])"
                 cellIdentifier = CellIdentifiersDetectionTable.Y4Cell
-            } else if tableColumn == tableView.tableColumns[9] {
+            } else if tableColumn == tableView.tableColumns[11] {
                 text = "\(yAvArray[row].rounded(toPlaces: 6))"
                 cellIdentifier = CellIdentifiersDetectionTable.YCell
-            } else if tableColumn == tableView.tableColumns[10] {
+            } else if tableColumn == tableView.tableColumns[12] {
+                text = "\(calcReg(i: row).rounded(toPlaces: 6))"
+                cellIdentifier = CellIdentifiersDetectionTable.DCell
+            } else if tableColumn == tableView.tableColumns[13] {
                 text = "\(dArray[row].rounded(toPlaces: 6))"
                 cellIdentifier = CellIdentifiersDetectionTable.DCell
-            } else if tableColumn == tableView.tableColumns[11] {
+            }
+            
+            if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier), owner: nil) as? NSTableCellView {
+                cell.textField?.stringValue = text
+                return cell
+            }
+            
+        }
+        return nil
+    }
+    
+    func loadParameter(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSTableCellView? {
+        var text: String = ""
+        var cellIdentifier: String = ""
+        if bArray.count > 0 {
+            if tableColumn == tableView.tableColumns[0] {
                 text = "\(bArray[row].rounded(toPlaces: 6))"
-                cellIdentifier = CellIdentifiersDetectionTable.BCell
-            } else if tableColumn == tableView.tableColumns[12] {
+                cellIdentifier = CellIdentifiersBTable.BCell
+            } else if tableColumn == tableView.tableColumns[1] {
                 text = "\(tArray[row].rounded(toPlaces: 6))"
-                cellIdentifier = CellIdentifiersDetectionTable.TCell
-            } else if tableColumn == tableView.tableColumns[13] {
+                cellIdentifier = CellIdentifiersBTable.TCell
+            } else if tableColumn == tableView.tableColumns[2] {
                 text = "\(Tstud.rounded(toPlaces: 6))"
-                cellIdentifier = CellIdentifiersDetectionTable.TstudCell
-            } else if tableColumn == tableView.tableColumns[14] {
+                cellIdentifier = CellIdentifiersBTable.TstudCell
+            } else if tableColumn == tableView.tableColumns[3] {
                 if tArray[row] > Tstud {
                     text = "+"
                 } else {
                     text = "-"
                 }
-                cellIdentifier = CellIdentifiersDetectionTable.ResultCell
+                cellIdentifier = CellIdentifiersBTable.ResultCell
             }
-
-            if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier), owner: nil) as? NSTableCellView {
-                cell.textField?.stringValue = text
-                return cell
-            }
-
+        }
+        if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: cellIdentifier), owner: nil) as? NSTableCellView {
+            cell.textField?.stringValue = text
+            return cell
         }
         return nil
     }
-
+    
     func loadPirsonTest(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSTableCellView? {
         var text: String = ""
         var cellIdentifier: String = ""
         if dAd != 0 {
             let N: Double = Double(bArray.count)
             let p: Double = Double(yArray[0].count)
-
+            
             if tableColumn == tableView.tableColumns[0] {
                 text = "\(dAd.rounded(toPlaces: 6))"
                 cellIdentifier = CellIdentifiersSpearmanTable.ValueCell
